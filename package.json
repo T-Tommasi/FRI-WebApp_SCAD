@@ -1,0 +1,22 @@
+{
+  "name": "scadenzario_frigomar",
+  "version": "1.0.0",
+  "description": "A web app for calculating and checking overdue invoices",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/T-Tommasi/FRI-WebApp_SCAD.git"
+  },
+  "author": "T.Tommasi",
+  "license": "AGPL-3.0",
+  "bugs": {
+    "url": "https://github.com/T-Tommasi/FRI-WebApp_SCAD/issues"
+  },
+  "homepage": "https://github.com/T-Tommasi/FRI-WebApp_SCAD#readme",
+  "dependencies": {
+    "node": "^22.16.0"
+  }
+}
