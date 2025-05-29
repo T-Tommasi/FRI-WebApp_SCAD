@@ -57,9 +57,9 @@ function retrieveClientInvoicesErp() {
       return SanitizationServices.sanitizeMoney(rawAmount, uuid)
     } catch (error) {
       Logger.log(
-        errorMessages('RetrieveClientInvoicesErp.etlAmountSanitizerLogger').INVALID_DATE.IT_TEXT +
+        errorMessages('RetrieveClientInvoicesErp.etlAmountSanitizerLogger').WRONG_VALUE_TYPE.IT_TEXT +
         ' Invoice UUID: "' + invoiceUUID + '"' +
-        '. Original Date Value: "' + rawDateString + '"' +
+        '. Original Date Value: "' + rawAmount + '"' +
         '. Error: ' + error.message
       );
       missingDataInvoiceArray.push(uuid)
@@ -75,11 +75,12 @@ function retrieveClientInvoicesErp() {
     let invoiceID = row[COLUMN.INVOICE_UUID.JS];
 
     // TODO: Pass sanitized numeric amount to defineInvoiceType.
-    let invoiceDefinition = defineInvoiceType(sanitizedAmount);
+
     let sanitizedInvoiceDate = etlDateSanitizerLogger(row[COLUMN.INVOICE_DATE.JS], invoiceID);
     let sanitizedInvoiceOverdueDate = etlDateSanitizerLogger(row[COLUMN.OVERDUE_DATE_COL.JS], invoiceID);
     let sanitizedAmount = etlAmountSanitizerLogger(row[COLUMN.INVOICE_AMOUNT.JS], invoiceID)
     let sanitizedPaid = etlAmountSanitizerLogger(row[COLUMN.INVOICE_PAID_AMOUNT.JS], invoiceID);
+        let invoiceDefinition = defineInvoiceType(sanitizedAmount);
 
     // Skips rows deemed to be summary/junk based on unparseable OVERDUE_DATE_COL.
     if (sanitizedInvoiceOverdueDate === 'missingDate' || sanitizedAmount === 'missingData') {
@@ -124,12 +125,12 @@ function retrieveClientInvoicesErp() {
       // invoiceID is already defined from the top of the loop
       if (!clientInvoicesMap[clientID].invoices.find((invoiceCheck) => invoiceCheck.uuid === invoiceID)) { // TODO: Use sanitized invoiceID
         let invoice = new Invoice(
-          invoiceID,
-          clientID,
-          sanitizedAmount,    // TODO: Sanitize
+          invoiceID, //TODO: Sanitize
+          clientID, //TODO: Sanitize
+          sanitizedAmount,
           sanitizedInvoiceDate,
           sanitizedInvoiceOverdueDate,
-          sanitizedPaid, // TODO: Sanitize
+          sanitizedPaid,
           invoiceDefinition
         );
         clientInvoicesMap[clientID].invoices.push(invoice);

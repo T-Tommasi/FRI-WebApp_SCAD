@@ -154,17 +154,17 @@ function INVOKE_SHEET() {
 
 function clientImporterColumn() {
   return {
-    OVERDUE_DATE_COL: { SHEET: 1, JS: SHEET - 1 }, //-- includes 'totale ordine lettura' on the same column, must be sanitized
-    CLIENT_UUID: { SHEET: 2, JS: SHEET - 1 }, //-- includes invoice total amount (same as INVOICE_AMOUNT), needs to be sanitized
-    CLIENT_NAME: { SHEET: 3, JS: SHEET - 1 },
-    INVOICE_DATE: { SHEET: 4, JS: SHEET - 1 },
-    INVOICE_UUID: { SHEET: 5, JS: SHEET - 1 },
-    INVOICE_PAYMENT_TYPE: { SHEET: 6, JS: SHEET - 1 },
-    INVOICE_AMOUNT: { SHEET: 7, JS: SHEET - 1 },
-    INVOICE_PAID_AMOUNT: { SHEET: 8, JS: SHEET - 1 },
-    //INVOICE_EARLY_PAYMENT: {SHEET: 9, JS: SHEET-1} //-- NOT IN USE, no clue what this does in the ERP or what it means, besides it's always 'S'
-    INVOICE_NOTE: { SHEET: 10, JS: SHEET - 1 }, //-- Always empty when parsed by ERP
-    //INVOICE_STATUS: {SHEET:11, JS: SHEET-1}, //-- Commented out - status will be dinamically calculated,
+    OVERDUE_DATE_COL: { SHEET: 1, JS: 0 }, //-- includes 'totale ordine lettura' on the same column, must be sanitized
+    CLIENT_UUID: { SHEET: 2, JS: 1 }, //-- includes invoice total amount (same as INVOICE_AMOUNT), needs to be sanitized
+    CLIENT_NAME: { SHEET: 3, JS: 2 },
+    INVOICE_DATE: { SHEET: 4, JS: 3 },
+    INVOICE_UUID: { SHEET: 5, JS: 4 },
+    INVOICE_PAYMENT_TYPE: { SHEET: 6, JS: 5 },
+    INVOICE_AMOUNT: { SHEET: 7, JS: 6 },
+    INVOICE_PAID_AMOUNT: { SHEET: 8, JS: 7 },
+    //INVOICE_EARLY_PAYMENT: {SHEET: 9, JS: 8} //-- NOT IN USE, no clue what this does in the ERP or what it means, besides it's always 'S'
+    INVOICE_NOTE: { SHEET: 10, JS: 9 }, //-- Always empty when parsed by ERP
+    //INVOICE_STATUS: {SHEET:11, JS: 10}, //-- Commented out - status will be dinamically calculated,
   }
 };
 
@@ -194,14 +194,11 @@ class Client {
   }
 
   totalLeftToPay() {
-    this.toPay = 0;
-    for (let invoice in this.invoices) {
-      if (typeof invoice.leftToPay === "number") {
-        toPay += invoice.leftToPay;
-      } else {
-
-      }
+    let toPay = 0;
+    for (let invoice of this.invoices) {
+      toPay += invoice.amount - invoice.paid;
     }
+    return toPay
   }
 }
 

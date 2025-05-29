@@ -55,12 +55,8 @@ class SanitizationServices {
     }
 
     if (amount === null || amount == '') {
-      Logger.log(`SanitizeMoney (for UUID: ${uuidForRow}): Received empty/null value. Returning 0.`);
+      Logger.log(`SanitizeMoney (for UUID: ${uuid}): Received empty/null value. Returning 0.`);
       return 0;
-    }
-
-    if (isNaN(amount) || !isFinite(amount)) {
-      throw new Error(errorMessages(`SanitizeMoney for UUID: ${uuid}is NAN_OR_INFINITE`).IS_NAN_OR_INFINITE.IT_TEXT)
     }
 
     if (typeof amount != "string") {
@@ -71,9 +67,9 @@ class SanitizationServices {
     let trimmedAmount = rawAmount.replace(',','.');
     let sanitizedAmount = parseFloat(trimmedAmount);
 
-    if (isNaN(sanitizedAmount)) {
+    if (isNaN(sanitizedAmount) || !isFinite(sanitizedAmount)) {
       Logger.log(`SanitizeMoney (for UUID: ${uuid}): Failed to parse string to number. Original: "${rawAmount}", Cleaned attempt: "${sanitizedAmount}"`)
-      throw new Error(errorMessages('SanitationServices.sanitizeMoney').WRONG_VALUE_TYPE.IT_TEXT);
+      throw new Error(errorMessages('SanitationServices.sanitizeMoney').IS_NAN_OR_INFINITE.IT_TEXT);
     }
 
     return sanitizedAmount
