@@ -150,6 +150,18 @@ function INVOKE_SHEET() {
   }
 }
 
+function errorCatcher(uuid,errorArray,controlCounter) {
+  if (!uuid) {
+    uuid = errorMessages().NO_VALID_UUID.VALUE
+  }
+  if (!errorArray) {
+    throw new Error("ErrorCatcher missing a valid array! (A error-error, ironic, isn't it?)")
+  }
+      errorArray.push(uuid)
+      controlCounter += 1
+      return 'missingData'
+}
+
 //Column identifiers for ETLservice
 
 function clientImporterColumn() {

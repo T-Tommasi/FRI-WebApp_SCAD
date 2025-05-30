@@ -49,6 +49,15 @@ function retrieveClientInvoicesErp() {
     }
   }
 
+  function etlClientVendorIdSanitizerLogger(uuid) {
+    try {
+      return SanitizationServices.sanitizeClientVendorId(uuid);
+    } catch (error) {
+      let result = errorCatcher(uuid,missingDataInvoiceArray,skippedInvoices);
+      return result
+    }
+  }
+
   function etlAmountSanitizerLogger(rawAmount, uuid) {
     if (!uuid) {
       uuid = 'missing_invoice_uuid_in_row'
