@@ -165,4 +165,36 @@ class SanitizationServices {
       );
     }
   }
+
+  static sanitizeInvoiceId(uuid) {
+    if (!uuid) {
+      throw new Error(errorMessages("sanitizeInvoiceId").NO_VALID_UUID.IT_TEXT);
+    }
+    if (
+      (typeof uuid != "string" && isNaN(uuid)) ||
+      (typeof uuid != "string" && !isFinite(uuid))
+    ) {
+      throw new Error(
+        errorMessages("sanitizeInvoiceId").IS_NAN_OR_INFINITE.IT_TEXT
+      );
+    }
+    let rawId = uuid.toString().trim();
+    let droppedCharacters = [];
+    let trimmedCharacters = [];
+    let regexDroppedChars = /[^a-zA-Z0-9]/;
+    for (let character of rawId) {
+      if (regexDroppedChars.test(character)) {
+        droppedCharacters.push(character);
+        continue;
+      }
+      trimmedCharacters.push(character);
+    }
+    if (trimmedCharacters.length === 0) {
+      throw new Error(
+        errorMessages("sanitizeInvoiceId.FINAL_CHECK").NO_VALID_UUID.IT_TEXT
+      );
+    }
+    let sanitizedId = trimmedCharacters.join('')
+    return sanitizedId;
+  }
 }
