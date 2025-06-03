@@ -150,7 +150,7 @@ function INVOKE_SHEET() {
   }
 }
 
-function errorCatcher(uuid,errorArray,controlCounter) {
+function errorCatcher(uuid,errorArray) {
   if (!uuid) {
     uuid = errorMessages().NO_VALID_UUID.VALUE
   }
@@ -158,7 +158,6 @@ function errorCatcher(uuid,errorArray,controlCounter) {
     throw new Error("ErrorCatcher missing a valid array! (A error-error, ironic, isn't it?)")
   }
       errorArray.push(uuid)
-      controlCounter += 1
       return 'missingData'
 }
 

@@ -1,8 +1,10 @@
+const { skip } = require("node:test");
+
 /**
  * Retrieves and processes client invoices from the ERP export sheet (IMPORT_AREA).
  * Organizes invoices by client, sanitizes date fields, and skips rows deemed
  * to be summary/junk data or individual invoices with unparseable dates.
- * @return {object} Contains clientInvoicesMap, an array of invoice UUIDs with 
+ * @return {object} Contains clientInvoicesMap, an array of invoice UUIDs with
  * problematic dates, and various processing statistics.
  */
 function retrieveClientInvoicesErp() {
@@ -32,20 +34,26 @@ function retrieveClientInvoicesErp() {
   // Returns a Date object on success, or 'missingDate' sentinel string on failure.
   function etlDateSanitizerLogger(rawDateString, invoiceUUID) {
     if (!invoiceUUID) {
-      invoiceUUID = 'missing_invoice_uuid_in_row'; // Default if UUID itself is problematic from row
+      invoiceUUID = "missing_invoice_uuid_in_row"; // Default if UUID itself is problematic from row
     }
     try {
       return SanitizationServices.sanitizeDate(rawDateString);
     } catch (error) {
       Logger.log(
-        errorMessages('RetrieveClientInvoicesErp.etlDateSanitizerLogger').INVALID_DATE.IT_TEXT +
-        ' Invoice UUID: "' + invoiceUUID + '"' +
-        '. Original Date Value: "' + rawDateString + '"' +
-        '. Error: ' + error.message
+        errorMessages("RetrieveClientInvoicesErp.etlDateSanitizerLogger")
+          .INVALID_DATE.IT_TEXT +
+          ' Invoice UUID: "' +
+          invoiceUUID +
+          '"' +
+          '. Original Date Value: "' +
+          rawDateString +
+          '"' +
+          ". Error: " +
+          error.message
       );
       missingDataInvoiceArray.push(invoiceUUID);
       skippedInvoices += 1;
-      return 'missingDate';
+      return "missingDate";
     }
   }
 
@@ -53,76 +61,107 @@ function retrieveClientInvoicesErp() {
     try {
       return SanitizationServices.sanitizeClientVendorId(uuid);
     } catch (error) {
-      let result = errorCatcher(uuid,missingDataInvoiceArray,skippedInvoices);
-      return result
+      let result = errorCatcher(uuid, missingDataInvoiceArray);
+      Logger.log(`Failed to sanitize ClientVendorID. UUID: "${uuid}", Error: ${error.message}`);
+      skippedInvoices += 1;
+      return result;
+    }
+  }
+
+  function etlInvoiceIdSanitizerLogger(invoiceId) {
+    try {
+      return SanitizationServices.sanitizeInvoiceId(invoiceId);
+    } catch (error) {
+      let result = errorCatcher(invoiceId, missingDataInvoiceArray);
+      Logger.log(`Failed to sanitize invoiceId. UUID: "${invoiceId}", Error: ${error.message}`);
+      skippedInvoices += 1;
+      return result;
     }
   }
 
   function etlAmountSanitizerLogger(rawAmount, uuid) {
     if (!uuid) {
-      uuid = 'missing_invoice_uuid_in_row'
+      uuid = "missing_invoice_uuid_in_row";
     }
     try {
-      return SanitizationServices.sanitizeMoney(rawAmount, uuid)
+      return SanitizationServices.sanitizeMoney(rawAmount, uuid);
     } catch (error) {
       Logger.log(
-        errorMessages('RetrieveClientInvoicesErp.etlAmountSanitizerLogger').WRONG_VALUE_TYPE.IT_TEXT +
-        ' Invoice UUID: "' + invoiceUUID + '"' +
-        '. Original Date Value: "' + rawAmount + '"' +
-        '. Error: ' + error.message
+        errorMessages("RetrieveClientInvoicesErp.etlAmountSanitizerLogger")
+          .WRONG_VALUE_TYPE.IT_TEXT +
+          ' Invoice UUID: "' +
+          invoiceUUID +
+          '"' +
+          '. Original Date Value: "' +
+          rawAmount +
+          '"' +
+          ". Error: " +
+          error.message
       );
-      missingDataInvoiceArray.push(uuid)
-      skippedInvoices += 1
-      return 'missingData'
+      missingDataInvoiceArray.push(uuid);
+      skippedInvoices += 1;
+      return "missingData";
     }
   }
 
   for (let row of DATA_RAW) {
     // TODO: Sanitize clientID (e.g., extract from complex string, validate format) before use as map key.
-    let clientID = row[COLUMN.CLIENT_UUID.JS];
+    let clientID = etlClientVendorIdSanitizerLogger(row[COLUMN.CLIENT_UUID.JS]);
     // TODO: Sanitize invoiceID (e.g., trim, validate format).
-    let invoiceID = row[COLUMN.INVOICE_UUID.JS];
+    let invoiceID = etlInvoiceIdSanitizerLogger(row[COLUMN.INVOICE_UUID.JS]);
 
     // TODO: Pass sanitized numeric amount to defineInvoiceType.
 
-    let sanitizedInvoiceDate = etlDateSanitizerLogger(row[COLUMN.INVOICE_DATE.JS], invoiceID);
-    let sanitizedInvoiceOverdueDate = etlDateSanitizerLogger(row[COLUMN.OVERDUE_DATE_COL.JS], invoiceID);
-    let sanitizedAmount = etlAmountSanitizerLogger(row[COLUMN.INVOICE_AMOUNT.JS], invoiceID)
-    let sanitizedPaid = etlAmountSanitizerLogger(row[COLUMN.INVOICE_PAID_AMOUNT.JS], invoiceID);
-        let invoiceDefinition = defineInvoiceType(sanitizedAmount);
+    let sanitizedInvoiceDate = etlDateSanitizerLogger(
+      row[COLUMN.INVOICE_DATE.JS],
+      invoiceID
+    );
+    let sanitizedInvoiceOverdueDate = etlDateSanitizerLogger(
+      row[COLUMN.OVERDUE_DATE_COL.JS],
+      invoiceID
+    );
+    let sanitizedAmount = etlAmountSanitizerLogger(
+      row[COLUMN.INVOICE_AMOUNT.JS],
+      invoiceID
+    );
+    let sanitizedPaid = etlAmountSanitizerLogger(
+      row[COLUMN.INVOICE_PAID_AMOUNT.JS],
+      invoiceID
+    );
+    let invoiceDefinition = defineInvoiceType(sanitizedAmount);
 
     // Skips rows deemed to be summary/junk based on unparseable OVERDUE_DATE_COL.
-    if (sanitizedInvoiceOverdueDate === 'missingDate' || sanitizedAmount === 'missingData') {
+    if (
+      sanitizedInvoiceOverdueDate === "missingDate" ||
+      sanitizedInvoiceDate === "missingDate" ||
+      sanitizedAmount === "missingData" ||
+      invoiceID === "missingData" ||
+      clientID === "missingData"
+    ) {
       skippedWrongRows += 1;
       continue;
     }
 
-    // Skips the current invoice if its specific INVOICE_DATE is unparseable,
-    // even if the row itself seemed valid based on OVERDUE_DATE_COL.
-    if (sanitizedInvoiceDate === 'missingDate') {
-      skippedWrongRows +=1
-      continue;
-    }
-
-    if (sanitizedPaid === 'missingData') {
+    if (sanitizedPaid === "missingData") {
       sanitizedPaid = 0;
-    };
+    }
 
     // All row[COLUMN.*.JS] accesses below require future sanitization for robustness.
 
-    if (!clientInvoicesMap[clientID]) { // New client
+    if (!clientInvoicesMap[clientID]) {
+      // New client
       let client = new Client(
-        row[COLUMN.CLIENT_UUID.JS],       // TODO: Sanitize
-        row[COLUMN.CLIENT_NAME.JS]        // TODO: Sanitize
+        clientID,
+        row[COLUMN.CLIENT_NAME.JS] // Cant sanitize names, too many random variables
       );
 
       let clientInvoice = new Invoice(
-        invoiceID,                        // Uses pre-fetched (but unsanitized) invoiceID
-        clientID,                         // Uses pre-fetched (but unsanitized) clientID
-        sanitizedAmount,    // TODO: Sanitize (parse currency)
+        invoiceID,
+        clientID,
+        sanitizedAmount,
         sanitizedInvoiceDate,
         sanitizedInvoiceOverdueDate,
-        sanitizedPaid, // TODO: Sanitize (parse currency/status)
+        sanitizedPaid,
         invoiceDefinition
       );
 
@@ -130,12 +169,18 @@ function retrieveClientInvoicesErp() {
       clientInvoicesMap[clientID] = client; // TODO: Use sanitized clientID for map key
       registeredNewInvoices += 1;
       registeredNewClients += 1;
-    } else { // Existing client
+    } else {
+      // Existing client
       // invoiceID is already defined from the top of the loop
-      if (!clientInvoicesMap[clientID].invoices.find((invoiceCheck) => invoiceCheck.uuid === invoiceID)) { // TODO: Use sanitized invoiceID
+      if (
+        !clientInvoicesMap[clientID].invoices.find(
+          (invoiceCheck) => invoiceCheck.uuid === invoiceID
+        )
+      ) {
+        // TODO: Use sanitized invoiceID
         let invoice = new Invoice(
-          invoiceID, //TODO: Sanitize
-          clientID, //TODO: Sanitize
+          invoiceID,
+          clientID,
           sanitizedAmount,
           sanitizedInvoiceDate,
           sanitizedInvoiceOverdueDate,
@@ -145,15 +190,21 @@ function retrieveClientInvoicesErp() {
         clientInvoicesMap[clientID].invoices.push(invoice);
         registeredNewInvoices += 1;
       } else {
-        Logger.log(`Invoice ${invoiceID} for client ${clientID} already processed/duplicate, skipping.`); // TODO: Use sanitized IDs
+        Logger.log(
+          `Invoice ${invoiceID} for client ${clientID} already processed/duplicate, skipping.`
+        ); // TODO: Use sanitized IDs
         skippedInvoices += 1;
         continue;
       }
     }
   }
 
-  return { clientInvoicesMap, missingDataInvoiceArray, registeredNewClients, registeredNewInvoices, skippedInvoices, skippedWrongRows };
+  return {
+    clientInvoicesMap,
+    missingDataInvoiceArray,
+    registeredNewClients,
+    registeredNewInvoices,
+    skippedInvoices,
+    skippedWrongRows,
+  };
 }
-
-
-
