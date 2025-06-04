@@ -62,7 +62,9 @@ function retrieveClientInvoicesErp() {
       return SanitizationServices.sanitizeClientVendorId(uuid);
     } catch (error) {
       let result = errorCatcher(uuid, missingDataInvoiceArray);
-      Logger.log(`Failed to sanitize ClientVendorID. UUID: "${uuid}", Error: ${error.message}`);
+      Logger.log(
+        `Failed to sanitize ClientVendorID. UUID: "${uuid}", Error: ${error.message}`
+      );
       skippedInvoices += 1;
       return result;
     }
@@ -73,7 +75,9 @@ function retrieveClientInvoicesErp() {
       return SanitizationServices.sanitizeInvoiceId(invoiceId);
     } catch (error) {
       let result = errorCatcher(invoiceId, missingDataInvoiceArray);
-      Logger.log(`Failed to sanitize invoiceId. UUID: "${invoiceId}", Error: ${error.message}`);
+      Logger.log(
+        `Failed to sanitize invoiceId. UUID: "${invoiceId}", Error: ${error.message}`
+      );
       skippedInvoices += 1;
       return result;
     }
@@ -107,10 +111,7 @@ function retrieveClientInvoicesErp() {
   for (let row of DATA_RAW) {
     // TODO: Sanitize clientID (e.g., extract from complex string, validate format) before use as map key.
     let clientID = etlClientVendorIdSanitizerLogger(row[COLUMN.CLIENT_UUID.JS]);
-    // TODO: Sanitize invoiceID (e.g., trim, validate format).
     let invoiceID = etlInvoiceIdSanitizerLogger(row[COLUMN.INVOICE_UUID.JS]);
-
-    // TODO: Pass sanitized numeric amount to defineInvoiceType.
 
     let sanitizedInvoiceDate = etlDateSanitizerLogger(
       row[COLUMN.INVOICE_DATE.JS],
@@ -146,8 +147,6 @@ function retrieveClientInvoicesErp() {
       sanitizedPaid = 0;
     }
 
-    // All row[COLUMN.*.JS] accesses below require future sanitization for robustness.
-
     if (!clientInvoicesMap[clientID]) {
       // New client
       let client = new Client(
@@ -166,7 +165,7 @@ function retrieveClientInvoicesErp() {
       );
 
       client.invoices.push(clientInvoice);
-      clientInvoicesMap[clientID] = client; // TODO: Use sanitized clientID for map key
+      clientInvoicesMap[clientID] = client;
       registeredNewInvoices += 1;
       registeredNewClients += 1;
     } else {
@@ -177,7 +176,6 @@ function retrieveClientInvoicesErp() {
           (invoiceCheck) => invoiceCheck.uuid === invoiceID
         )
       ) {
-        // TODO: Use sanitized invoiceID
         let invoice = new Invoice(
           invoiceID,
           clientID,
@@ -192,7 +190,7 @@ function retrieveClientInvoicesErp() {
       } else {
         Logger.log(
           `Invoice ${invoiceID} for client ${clientID} already processed/duplicate, skipping.`
-        ); // TODO: Use sanitized IDs
+        );
         skippedInvoices += 1;
         continue;
       }
