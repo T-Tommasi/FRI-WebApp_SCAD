@@ -206,3 +206,21 @@ function retrieveClientInvoicesErp() {
     skippedWrongRows,
   };
 }
+
+function writeClientToSheet(clientInvoiceMap, targetSheets) {
+  let clientsCollection = clientInvoiceMap;
+  let Client2dMap = [];
+
+  for (let client in clientsCollection) {
+    for (let invoice of client.invoices) {
+      let clientDbArray = [
+        client.uuid,
+        client.name,
+        invoice.amount,
+        '', //TODO: add dynamic calculation if invoice is overdue
+        invoice.uuid,
+        //TODO: Complete.
+      ]
+    }
+  }
+}
