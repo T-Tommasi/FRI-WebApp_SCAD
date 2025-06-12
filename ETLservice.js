@@ -1,5 +1,3 @@
-const { skip } = require("node:test");
-
 /**
  * Retrieves and processes client invoices from the ERP export sheet (IMPORT_AREA).
  * Organizes invoices by client, sanitizes date fields, and skips rows deemed
@@ -209,18 +207,20 @@ function retrieveClientInvoicesErp() {
 
 function writeClientToSheet(clientInvoiceMap, targetSheets) {
   let clientsCollection = clientInvoiceMap;
-  let Client2dMap = [];
-
-  for (let client in clientsCollection) {
+  let client2dMap = [];
+  for (let client of Object.values(clientsCollection)) {
     for (let invoice of client.invoices) {
       let clientDbArray = [
         client.uuid,
         client.name,
         invoice.amount,
-        '', //TODO: add dynamic calculation if invoice is overdue
+        invoice.isOverdue ? "OVERDUE" : "",
+        invoice.date,
         invoice.uuid,
-        //TODO: Complete.
-      ]
+        invoice.invoiceNote,
+        client.agent,
+      ];
+      client2dMap.push(clientDbArray);
     }
   }
 }

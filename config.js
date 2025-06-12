@@ -203,7 +203,7 @@ class Vendor {
 }
 
 class Client {
-  constructor(uuid, name, notes, invoices, phoneNumber, mail, location) {
+  constructor(uuid, name, notes, invoices, phoneNumber, mail, location, agent) {
     this.uuid = uuid;
     this.name = name;
     this.notes = notes || []; //This is an array that contains objects created by the class Note
@@ -212,6 +212,7 @@ class Client {
       phoneNumber || errorMessages("Client.phoneNumber").NO_NUMBER;
     this.mail = mail || errorMessages("Client.mail").NO_MAIL;
     this.location = location || errorMessages("Client.location").NO_LOCATION;
+    this.agent = agent || 'N/A'
   }
 
   totalLeftToPay() {
@@ -242,11 +243,13 @@ class Note {
 }
 
 class Invoice {
-  constructor(invoiceNumber, invoiceEntity, amount, date, dueDate, paid, type) {
+  constructor(invoiceNumber, invoiceEntity, amount, date, dueDate, paid, type, invoiceNote) {
     this.uuid = invoiceNumber;
     this.entity = invoiceEntity;
     this.date = date;
     this.dueDate = dueDate;
+    this.isOverdue = false;
+    this.paid = paid || 0;
     if (amount > 0) {
       this.amount = amount;
       this.paid = paid;
@@ -268,6 +271,14 @@ class Invoice {
       this.status = errorMessages("Object.Invoice").WRONG_VALUE_TYPE.IT_TEXT;
     }
     this.type = type || invoiceType().ERROR;
+    if (this.status != "Pagata") {
+      let today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (this.dueDate.getTime() < today.getTime()) {
+        this.isOverdue = true;
+      }
+    }
+    this.invoiceNote = invoiceNote || ''
   }
 }
 
