@@ -223,4 +223,6 @@ function writeClientToSheet(clientInvoiceMap, targetSheets) {
       client2dMap.push(clientDbArray);
     }
   }
+
+  return client2dMap
 }

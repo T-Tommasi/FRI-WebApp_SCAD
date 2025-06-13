@@ -99,6 +99,30 @@ function errorMessages(origin) {
       IT_TEXT: "value is either NAN or INFINITE",
       ORIGIN: origin,
     },
+
+    MISSING_SHEET_ID: {
+      VALUE: null,
+      INTERNAL_ERROR: true,
+      IT_TEXT: "no appropriate sheet ID",
+      ORIGIN: origin,
+    }
+  };
+}
+
+function getClientDbHeaders() {
+  return {
+    CLIENT_UUID: { TEXT: "Codice Cliente", COLUMN: 1 },
+    CLIENT_NAME: { TEXT: "Nominativo Cliente", COLUMN: 2 },
+    CLIENT_AGENT: { TEXT: "Agente", COLUMN: 3 },
+    INVOICE_UUID: { TEXT: "ID Fattura", COLUMN: 4 },
+    INVOICE_DATE: { TEXT: "Data Fattura", COLUMN: 5 },
+    INVOICE_DUE_DATE: { TEXT: "Data Scadenza", COLUMN: 6 },
+    INVOICE_AMOUNT: { TEXT: "Importo Totale", COLUMN: 7 },
+    INVOICE_PAID: { TEXT: "Importo Pagato", COLUMN: 8 },
+    INVOICE_LEFT_PAY: { TEXT: "Importo Residuo", COLUMN: 9 },
+    INVOICE_TYPE: { TEXT: "Tipo Documento", COLUMN: 10 },
+    INVOICE_STATUS: { TEXT: "Stato Fattura", COLUMN: 11 },
+    INVOICE_ISOVERDUE: { TEXT: "Scaduta?", COLUMN: 12 },
   };
 }
 
@@ -212,7 +236,7 @@ class Client {
       phoneNumber || errorMessages("Client.phoneNumber").NO_NUMBER;
     this.mail = mail || errorMessages("Client.mail").NO_MAIL;
     this.location = location || errorMessages("Client.location").NO_LOCATION;
-    this.agent = agent || 'N/A'
+    this.agent = agent || "N/A";
   }
 
   totalLeftToPay() {
@@ -243,13 +267,22 @@ class Note {
 }
 
 class Invoice {
-  constructor(invoiceNumber, invoiceEntity, amount, date, dueDate, paid, type, invoiceNote) {
+  constructor(
+    invoiceNumber,
+    invoiceEntity,
+    amount,
+    date,
+    dueDate,
+    paid,
+    type,
+    invoiceNote
+  ) {
     this.uuid = invoiceNumber;
     this.entity = invoiceEntity;
     this.date = date;
     this.dueDate = dueDate;
     this.isOverdue = false;
-    this.paid = paid || 0;
+
     if (amount > 0) {
       this.amount = amount;
       this.paid = paid;
@@ -258,6 +291,9 @@ class Invoice {
       this.paid = paid * -1;
     } else {
       this.amount = 0;
+      this.paid = 0;
+    }
+    if (isNaN(this.paid) || !isFinite(this.paid) || this.paid === null) {
       this.paid = 0;
     }
     this.leftToPay = this.amount - this.paid;
@@ -278,7 +314,7 @@ class Invoice {
         this.isOverdue = true;
       }
     }
-    this.invoiceNote = invoiceNote || ''
+    this.invoiceNote = invoiceNote || "";
   }
 }
 
