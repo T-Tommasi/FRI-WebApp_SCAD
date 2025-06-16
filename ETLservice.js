@@ -5,10 +5,10 @@
  * @return {object} Contains clientInvoicesMap, an array of invoice UUIDs with
  * problematic dates, and various processing statistics.
  */
-function retrieveClientInvoicesErp() {
+function retrieveClientInvoicesErp(importData) {
   const COLUMN = clientImporterColumn();
   const CLIENT_DB = INVOKE_SHEET().CLIENTS; // Reserved for future database write operations
-  const IMPORT_AREA = INVOKE_SHEET().CLIENTS_ETL;
+  const IMPORT_AREA = importData;
   const HEADER_ROWS = 1;
 
   let skippedInvoices = 0;
@@ -205,7 +205,7 @@ function retrieveClientInvoicesErp() {
   };
 }
 
-function writeClientToSheet(clientInvoiceMap, targetSheets) {
+function convertTo2dMap(clientInvoiceMap) {
   let clientsCollection = clientInvoiceMap;
   let client2dMap = [];
   for (let client of Object.values(clientsCollection)) {
