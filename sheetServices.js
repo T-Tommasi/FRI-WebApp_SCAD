@@ -15,10 +15,9 @@ class SheetWriter {
 
     const RAW_MAP = retrieveClientInvoicesErp(originSheet);
 
-    const scheme = getClientDbHeaders();
-    const HEADER_SCHEME = getClientDbHeaders();
-    const HEADERS = this._headerSorter(scheme);
-    const ROWS = this._generate2dArray(RAW_MAP,HEADER_SCHEME)
+    const SCHEME = getClientDbHeaders();
+    const HEADERS = this._headerSorter(SCHEME);
+    const ROWS = this._generate2dArray(RAW_MAP.clientInvoicesMap, HEADER_SCHEME);
 
     const INFO_OBJECT = {
       SKIPPED_INVOICES: RAW_MAP.skippedInvoices,
@@ -29,9 +28,22 @@ class SheetWriter {
     let writerData = [HEADERS, ...ROWS];
 
     if (writerData.length > 1) {
-        //TODO: Complete this function writing script
-        //TODO: Create cleanContent logic
-        //TODO: Create function to read and save notes that have been saved into memory from external interface
+      const OUTPUT_COL_LENGTH = writerData[0].length;
+      const OUTPUT_ROW_LENGTH = writerData.length;
+      this._cleanContent(targetSheet);
+      targetSheet
+        .getRange(1, 1, OUTPUT_ROW_LENGTH, OUTPUT_COL_LENGTH)
+        .setValues(writerData);
+      //TODO: Complete this function writing script
+      //TODO: Create function to read and save notes that have been saved into memory from external interface
+    }
+  }
+
+  static _cleanContent(target) {
+    if (target.getLastRow() > 1) {
+      target
+        .getRange(2, 1, target.getLastRow() - 1, target.getLastColumn())
+        .clearContent();
     }
   }
 
@@ -50,11 +62,11 @@ class SheetWriter {
     return sortedHeaders;
   }
 
-  static _generate2dArray(clientInvoiceRawMap,headerSchema) {
+  static _generate2dArray(clientInvoiceRawMap, headerSchema) {
     let writingArray = [];
 
     for (let client of Object.values(clientInvoiceRawMap)) {
-      for (let invoice of clientInvoiceRawMap.invoices) {
+      for (let invoice of client.invoices) {
         let invoiceRow = new Array(Object.keys(headerSchema).length);
 
         invoiceRow[headerSchema.CLIENT_UUID.COLUMN - 1] = client.uuid;
