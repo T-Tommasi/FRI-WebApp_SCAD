@@ -40,14 +40,14 @@ function retrieveClientInvoicesErp(importData) {
       Logger.log(
         errorMessages("RetrieveClientInvoicesErp.etlDateSanitizerLogger")
           .INVALID_DATE.IT_TEXT +
-          ' Invoice UUID: "' +
-          invoiceUUID +
-          '"' +
-          '. Original Date Value: "' +
-          rawDateString +
-          '"' +
-          ". Error: " +
-          error.message
+        ' Invoice UUID: "' +
+        invoiceUUID +
+        '"' +
+        '. Original Date Value: "' +
+        rawDateString +
+        '"' +
+        ". Error: " +
+        error.message
       );
       missingDataInvoiceArray.push(invoiceUUID);
       skippedInvoices += 1;
@@ -91,14 +91,14 @@ function retrieveClientInvoicesErp(importData) {
       Logger.log(
         errorMessages("RetrieveClientInvoicesErp.etlAmountSanitizerLogger")
           .WRONG_VALUE_TYPE.IT_TEXT +
-          ' Invoice UUID: "' +
-          invoiceUUID +
-          '"' +
-          '. Original Date Value: "' +
-          rawAmount +
-          '"' +
-          ". Error: " +
-          error.message
+        ' Invoice UUID: "' +
+        uuid +
+        '"' +
+        '. Original Amount Value: "' +
+        rawAmount +
+        '"' +
+        ". Error: " +
+        error.message
       );
       missingDataInvoiceArray.push(uuid);
       skippedInvoices += 1;
@@ -127,7 +127,6 @@ function retrieveClientInvoicesErp(importData) {
       row[COLUMN.INVOICE_PAID_AMOUNT.JS],
       invoiceID
     );
-    let invoiceDefinition = defineInvoiceType(sanitizedAmount);
 
     // Skips rows deemed to be summary/junk based on unparseable OVERDUE_DATE_COL.
     if (
@@ -140,6 +139,9 @@ function retrieveClientInvoicesErp(importData) {
       skippedWrongRows += 1;
       continue;
     }
+
+    let invoiceDefinition = defineInvoiceType(sanitizedAmount);
+
 
     if (sanitizedPaid === "missingData") {
       sanitizedPaid = 0;

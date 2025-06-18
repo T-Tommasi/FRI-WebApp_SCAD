@@ -17,7 +17,7 @@ class SheetWriter {
 
     const SCHEME = getClientDbHeaders();
     const HEADERS = this._headerSorter(SCHEME);
-    const ROWS = this._generate2dArray(RAW_MAP.clientInvoicesMap, HEADER_SCHEME);
+    const ROWS = this._generate2dArray(RAW_MAP.clientInvoicesMap, SCHEME);
 
     const INFO_OBJECT = {
       SKIPPED_INVOICES: RAW_MAP.skippedInvoices,
@@ -34,8 +34,6 @@ class SheetWriter {
       targetSheet
         .getRange(1, 1, OUTPUT_ROW_LENGTH, OUTPUT_COL_LENGTH)
         .setValues(writerData);
-      //TODO: Complete this function writing script
-      //TODO: Create function to read and save notes that have been saved into memory from external interface
     }
   }
 
@@ -90,4 +88,8 @@ class SheetWriter {
 
     return writingArray;
   }
+}
+
+function runScript() {
+  SheetWriter.writeToInvoiceDb(INVOKE_SHEET().CLIENTS, INVOKE_SHEET().CLIENTS_ETL)
 }

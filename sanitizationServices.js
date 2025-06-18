@@ -1,6 +1,3 @@
-const { error } = require("console");
-const { type } = require("os");
-
 class SanitizationServices {
   static sanitizeDate(date) {
     let _dateArray = null;
